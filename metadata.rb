@@ -1,5 +1,5 @@
 name             'serf'
-maintainer       'Cerner Corp.'
+maintainer       'Bryan Baugher'
 maintainer_email 'Bryan.Baugher@Cerner.com'
 license          'All rights reserved'
 description      'Installs/Configures serf'
