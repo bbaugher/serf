@@ -11,6 +11,14 @@ Using the default attributes will setup a single Serf agent in its own cluster.
 If you already have a Serf agent (or cluster) running specify the address(es) with the 
 `node["serf"]["join_addresses"]` attribute so the agent will join the cluster(s).
 
+What does the installation look like
+------------------------------------
+
+All of Serf's files will be located under `node["serf"]["base_directory"]` (or /opt/serf/ by default). 
+An init.d script is created under `/etc/init.d/serf` which can also be used like `service serf start`. 
+Serf's agent logs will be made available under `node["serf"]["log_directory"]` or (`/var/log/serf` by 
+default).
+
 Attributes
 ----------
 
