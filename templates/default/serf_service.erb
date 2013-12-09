@@ -16,8 +16,8 @@ NAME="Serf Agent"
 SERF_BINARY=<%= node["serf"]["base_directory"] %>/bin/serf
 SERF_ROLE=<%= node["serf"]["role"] %>
 SERF_NODE=<%= node["serf"]["node"] %>
-SERF_RPC_ADDRESS=<%= node["serf"]["rpc_address"]%>
-SERF_BIND_ADDRESS=<%= node["serf"]["bind_address"]%>
+SERF_RPC_ADDRESS=<%= @rpc_address %>
+SERF_BIND_ADDRESS=<%= @bind_address %>
 SERF_LOG_LEVEL=<%= node["serf"]["log_level"] %>
 SERF_AGENT_LOG=<%= node["serf"]["log_directory"] %>/agent.log
 SERF_JOIN_ADDRESSES="<%= node["serf"]["join_addresses"].join " " %>"

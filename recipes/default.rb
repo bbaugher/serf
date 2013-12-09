@@ -7,8 +7,8 @@
 # TODO: Support other distributions besides 'linux'
 node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
 
-node.default["serf"]["rpc_address"] = "127.0.0.1:#{node["serf"]["rpc_port"]}"
-node.default["serf"]["bind_address"] = "0.0.0.0:#{node["serf"]["bind_port"]}"
+node.default["serf"]["rpc_address"] = "127.0.0.1"
+node.default["serf"]["bind_address"] = "0.0.0.0"
 
 serfBinDirectory = File.join node["serf"]["base_directory"], "bin"
 serfBinary = File.join serfBinDirectory, "serf"
@@ -16,6 +16,13 @@ serfEventHandlersDirectory = File.join node["serf"]["base_directory"], "event_ha
 
 binaryZipFileName = "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
 cachedZipFilePath = File.join Chef::Config[:file_cache_path], binaryZipFileName
+
+# Some backward compability
+bind_address = node["serf"]["bind_address"] unless node["serf"]["bind_address"].scan(':').empty?
+rpc_address = node["serf"]["rpc_address"] unless node["serf"]["rpc_address"].scan(':').empty?
+# Setting bind and rpc_address
+bind_address ||= "#{node["serf"]["bind_address"]}:#{node["serf"]["bind_port"]}" 
+rpc_address ||= "#{node["serf"]["rpc_address"]}:#{node["serf"]["rpc_port"]}" 
 
 # Create serf directories
 directory node["serf"]["base_directory"] do
@@ -127,7 +134,9 @@ template "/etc/init.d/serf" do
   backup false
   notifies :restart, "service[serf]"
   variables({
-     :event_handlers => event_handlers
+     :event_handlers => event_handlers,
+     :rpc_address => rpc_address,
+     :bind_address => bind_address
   })
 end
 
