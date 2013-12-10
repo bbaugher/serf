@@ -62,7 +62,7 @@ Attributes
  * `node["serf"]["base_binary_url"]` : The base url used to download the binary zip (default="https://dl.bintray.com/mitchellh/serf/")
  * `node["serf"]["version"]` : The version of the Serf agent to install (default="0.2.1")
  * `node["serf"]["arch"]` : The architecture of the Serf agent to install (default=`kernel['machine'] =~ /x86_64/ ? "amd64" : "386"`)
- * `node["serf"]["binary_url"]` : The full binary url of the Serf agent (default=`File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"`)
+ * `node["serf"]["binary_url"]` : The full binary url of the Serf agent. If you override this value make sure to provide a valid and up to date value for `node["serf"]["version"]` (default=`File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"`)
  * `node["serf"]["base_directory"]` : The base directory Serf should be installed into (default="/opt/serf")
  * `node["serf"]["log_directory"]` : The directory of the Serf agent logs (default="/var/log/serf")
  * `node["serf"]["confdirectory"]` : The directory of the Serf agent config (default="/etc/serf")
