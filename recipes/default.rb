@@ -48,12 +48,12 @@ end
 
 # /var/log/serf
 link node["serf"]["log_directory"] do
-  to helper.getAgentLog
+  to helper.getHomeLogDirectory
 end
 
 # /etc/serf
 link node["serf"]["conf_directory"] do
-  to helper.getAgentConfig
+  to helper.getHomeConfigDirectory
 end
 
 # Download binary zip file
