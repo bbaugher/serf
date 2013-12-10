@@ -13,9 +13,9 @@
 ### END INIT INFO
 
 NAME="Serf Agent"
-SERF_BINARY=<%= @agent_binary %>
-SERF_AGENT_LOG=<%= @agent_log_file %>
-SERF_AGENT_CONF_FILE=<%= @agent_config_file %>
+SERF_BINARY=<%= @helper.getSerfBinary %>
+SERF_AGENT_LOG=<%= @helper.getAgentLog %>
+SERF_AGENT_CONF_FILE=<%= @helper.getAgentConfig %>
 
 SLEEP_TIME=5
 CURRENT_WAIT=0

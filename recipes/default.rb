@@ -4,24 +4,8 @@
 # Recipe:: default
 #
 
-require 'json'
-
-# TODO: Support other distributions besides 'linux'
-node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
-
-serfBinDirectory = File.join node["serf"]["base_directory"], "bin"
-serfBinary = File.join serfBinDirectory, "serf"
-
-serfEventHandlersDirectory = File.join node["serf"]["base_directory"], "event_handlers"
-
-serfInternalConfDirectory = File.join node["serf"]["base_directory"], "config"
-serfAgentConf = File.join serfInternalConfDirectory, "serf_agent.json"
-
-serfInternalLogDirectory = File.join node["serf"]["base_directory"], "logs"
-serfAgentLogFile = File.join serfInternalLogDirectory, "agent.log"
-
-binaryZipFileName = "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
-cachedZipFilePath = File.join Chef::Config[:file_cache_path], binaryZipFileName
+# Initializes the SerfHelper class by giving it access to `node`
+helper = SerfHelper.new self
 
 # Create serf directories
 
@@ -33,28 +17,28 @@ directory node["serf"]["base_directory"] do
 end
 
 # /opt/serf/event_handlers
-directory serfEventHandlersDirectory do
+directory helper.getEventHandlersDirectory do
   mode 00755
   recursive true
   action :create
 end
 
 # /opt/serf/bin
-directory serfBinDirectory do
+directory helper.getBinDirectory do
   mode 00755
   recursive true
   action :create
 end
 
 # /opt/serf/config
-directory serfInternalConfDirectory do
+directory helper.getHomeConfigDirectory do
   mode 00755
   recursive true
   action :create
 end
 
 # /opt/serf/log
-directory serfInternalLogDirectory do
+directory helper.getHomeLogDirectory do
   mode 00755
   recursive true
   action :create
@@ -64,16 +48,16 @@ end
 
 # /var/log/serf
 link node["serf"]["log_directory"] do
-  to serfInternalLogDirectory
+  to helper.getAgentLog
 end
 
 # /etc/serf
 link node["serf"]["conf_directory"] do
-  to serfInternalConfDirectory
+  to helper.getAgentConfig
 end
 
 # Download binary zip file
-remote_file cachedZipFilePath do
+remote_file helper.getZipFilePath do
   action :create_if_missing
   source node["serf"]["binary_url"]
   mode 00644
@@ -87,36 +71,36 @@ end
 
 # Unzip serf binary
 execute "unzip serf binary" do
-  cwd serfBinDirectory
+  cwd helper.getBinDirectory
   
   # -q = quiet, -o = overwrite existing files
-  command "unzip -qo #{cachedZipFilePath}"
+  command "unzip -qo #{helper.getZipFilePath}"
   
   notifies :restart, "service[serf]"
   only_if do
-    if File.exists? serfBinary
-      !`#{serfBinary} version`.chomp.include? "Serf v#{node["serf"]["version"]}" 
-    else
-      true
+    currentVersion = helper.getSerfInstalledVersion
+    if currentVersion != node["serf"]["version"]
+      Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
     end
+    currentVersion != node["serf"]["version"]
   end
 end
 
 # Ensure serf binary has correct permissions
-file serfBinary do
+file helper.getSerfBinary do
   mode 00755
 end
 
 # Add serf to /usr/bin so it is on our path
 link "/usr/bin/serf" do
-  to serfBinary
+  to helper.getSerfBinary
 end
 
 # Add entry to logrotate.d to log roll agents log files daily
 template "/etc/logrotate.d/serf_agent" do
   source  "serf_log_roll.erb"
   mode 00755
-  variables(:agent_log_file => serfAgentLogFile)
+  variables(:agent_log_file => helper.getAgentLog)
   backup false
 end
 
@@ -133,7 +117,7 @@ node["serf"]["event_handlers"].each do |event_handler|
   end
   
   if event_handler.has_key? "url"
-    event_handler_path =  File.join serfEventHandlersDirectory, File.basename(event_handler["url"])
+    event_handler_path =  File.join helper.getEventHandlersDirectory, File.basename(event_handler["url"])
     event_handler_command << event_handler_path
     
     # Download event handler script
@@ -147,14 +131,14 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] has no 'url'"
   end
   
-  node["serf"]["agent"]["event_handlers"].push event_handler_command
+  node.default["serf"]["agent"]["event_handlers"] << event_handler_command
 end
 
 # Create serf_agent.json
-template serfAgentConf do
+template helper.getAgentConfig do
   source  "serf_agent.json.erb"
   mode 00755
-  variables( :agent_json => node["serf"]["agent"].to_hash.to_json)
+  variables( :agent_json => helper.getAgentJson)
   backup false
 end
 
@@ -162,8 +146,7 @@ end
 template "/etc/init.d/serf" do
   source  "serf_service.erb"
   mode  00755
-  variables(:agent_binary => serfBinary, :agent_log_file => serfAgentLogFile, 
-            :agent_config_file => serfAgentConf)
+  variables(:helper => helper)
   backup false
   notifies :restart, "service[serf]"
 end
