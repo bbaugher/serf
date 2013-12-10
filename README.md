@@ -33,14 +33,20 @@ Event Handlers
 An [event handler](http://www.serfdom.io/docs/agent/event-handlers.html) is a script that is run when the Serf agent
 recieves an event (member-join, member-leave, member-failed, or user).
 
-You can configure an event handler via the attribute `node["serf"]["event_handlers"]`. The format for configuring an 
-event handler throught the serf cookbook is,
+You can configure an event handler via the attribute `node["serf"]["event_handlers"]`. The format of the `event_handlers` 
+attribute is the following,
 
-    {
-      "url" : "URL", # REQUIRED
-      "event_type" : "EVENT_TYPE" #OPTIONAL
-    }
+    [
+      {
+        "url" : "URL", # REQUIRED
+        "event_type" : "EVENT_TYPE" #OPTIONAL
+      },
+      ...
+    ]
     
+Chef will download the event handler and ensure it stays up to date. It will also add it to the serf agent's list of event handlers. 
+Each event handler must have a unique name.
+
 The `event_type` value filters the event handler for certain events. Use [this doc](http://www.serfdom.io/docs/agent/event-handlers.html) 
 to figure out the `event_type` you need.
 
