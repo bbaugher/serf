@@ -22,10 +22,10 @@ What does the installation look like
 
 By default the installation will look like,
 
-    /opt/serf/* - All of serf's files (config, binaries, event handlers, logs...)
-    /etc/serf/* - Link to all of serf's config files
-    /var/log/serf - Link to all of serf's log files
-    /etc/init.d/serf - An init.d script to start/stop the agent
+    /opt/serf/*      - All of serf's files (config, binaries, event handlers, logs...)
+    /etc/serf/*      - Link to all of serf's config files
+    /var/log/serf/*  - Link to all of serf's log files
+    /etc/init.d/serf - An init.d script to start/stop the agent. You can use service serf [start|stop|restart|status] instead
 
 Event Handlers
 --------------
