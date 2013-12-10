@@ -4,7 +4,7 @@
 #
 # Configuration file for unix logrotate utility.
 
-<%= node["serf"]["log_directory"]%>/agent.out {
+<%= @agent_log_file %> {
 minsize 10M
 copytruncate
 notifempty

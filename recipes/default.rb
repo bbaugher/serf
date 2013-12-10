@@ -4,42 +4,72 @@
 # Recipe:: default
 #
 
+require 'json'
+
 # TODO: Support other distributions besides 'linux'
 node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
 
-node.default["serf"]["rpc_address"] = "127.0.0.1:#{node["serf"]["rpc_port"]}"
-node.default["serf"]["bind_address"] = "0.0.0.0:#{node["serf"]["bind_port"]}"
-
 serfBinDirectory = File.join node["serf"]["base_directory"], "bin"
 serfBinary = File.join serfBinDirectory, "serf"
+
 serfEventHandlersDirectory = File.join node["serf"]["base_directory"], "event_handlers"
+
+serfInternalConfDirectory = File.join node["serf"]["base_directory"], "config"
+serfAgentConf = File.join serfInternalConfDirectory, "serf_agent.json"
+
+serfInternalLogDirectory = File.join node["serf"]["base_directory"], "logs"
+serfAgentLogFile = File.join serfInternalLogDirectory, "agent.log"
 
 binaryZipFileName = "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
 cachedZipFilePath = File.join Chef::Config[:file_cache_path], binaryZipFileName
 
 # Create serf directories
+
+# /opt/serf
 directory node["serf"]["base_directory"] do
   mode 00755
   recursive true
   action :create
 end
 
+# /opt/serf/event_handlers
 directory serfEventHandlersDirectory do
   mode 00755
   recursive true
   action :create
 end
 
+# /opt/serf/bin
 directory serfBinDirectory do
   mode 00755
   recursive true
   action :create
 end
 
-directory node["serf"]["log_directory"] do
+# /opt/serf/config
+directory serfInternalConfDirectory do
   mode 00755
   recursive true
   action :create
+end
+
+# /opt/serf/log
+directory serfInternalLogDirectory do
+  mode 00755
+  recursive true
+  action :create
+end
+
+# Create unix expected directories (/etc/serf, /var/log/serf, ...)
+
+# /var/log/serf
+link node["serf"]["log_directory"] do
+  to serfInternalLogDirectory
+end
+
+# /etc/serf
+link node["serf"]["conf_directory"] do
+  to serfInternalConfDirectory
 end
 
 # Download binary zip file
@@ -65,7 +95,7 @@ execute "unzip serf binary" do
   notifies :restart, "service[serf]"
   only_if do
     if File.exists? serfBinary
-      `#{serfBinary} version`.chomp != "Serf v#{node["serf"]["version"]}"
+      !`#{serfBinary} version`.chomp.include? "Serf v#{node["serf"]["version"]}" 
     else
       true
     end
@@ -86,25 +116,25 @@ end
 template "/etc/logrotate.d/serf_agent" do
   source  "serf_log_roll.erb"
   mode 00755
+  variables(:agent_log_file => serfAgentLogFile)
   backup false
 end
 
-event_handlers = ""
-
+# Download and configure specified event handlers
 node["serf"]["event_handlers"].each do |event_handler|
   
   unless event_handler.is_a? Hash
     raise "Event handler [#{event_handler}] is required to be a hash"
   end
   
-  event_handler_option = "-event-handler "
+  event_handler_command = ""
   if event_handler.has_key? "event_type"
     event_handler_option << "#{event_handler["event_type"]}="
   end
   
   if event_handler.has_key? "url"
     event_handler_path =  File.join serfEventHandlersDirectory, File.basename(event_handler["url"])
-    event_handler_option << event_handler_path
+    event_handler_command << event_handler_path
     
     # Download event handler script
     remote_file event_handler_path do
@@ -117,18 +147,25 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] has no 'url'"
   end
   
-  event_handlers << event_handler_option
+  node["serf"]["agent"]["event_handlers"].push event_handler_command
 end
 
-# Create init.d template
+# Create serf_agent.json
+template serfAgentConf do
+  source  "serf_agent.json.erb"
+  mode 00755
+  variables( :agent_json => node["serf"]["agent"].to_hash.to_json)
+  backup false
+end
+
+# Create init.d script
 template "/etc/init.d/serf" do
   source  "serf_service.erb"
   mode  00755
+  variables(:agent_binary => serfBinary, :agent_log_file => serfAgentLogFile, 
+            :agent_config_file => serfAgentConf)
   backup false
   notifies :restart, "service[serf]"
-  variables({
-     :event_handlers => event_handlers
-  })
 end
 
 # Start agent service
