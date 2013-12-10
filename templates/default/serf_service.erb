@@ -16,6 +16,7 @@ NAME="Serf Agent"
 SERF_BINARY=<%= @helper.getSerfBinary %>
 SERF_AGENT_LOG=<%= @helper.getAgentLog %>
 SERF_AGENT_CONF_FILE=<%= @helper.getAgentConfig %>
+SERF_USER=<%= node["serf"]["user"] %>
 
 SLEEP_TIME=5
 CURRENT_WAIT=0
@@ -25,7 +26,7 @@ start() {
 	findPid
 	
 	if [ "" = "$FOUND_PID" ]; then
-      $SERF_BINARY agent -config-file $SERF_AGENT_CONF_FILE &>> $SERF_AGENT_LOG &
+      su -l $SERF_USER -c "$SERF_BINARY agent -config-file $SERF_AGENT_CONF_FILE &>> $SERF_AGENT_LOG &"
       
       if [[ $? -ne 0 ]]; then
         echo "Error starting $NAME"

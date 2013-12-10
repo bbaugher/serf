@@ -1,5 +1,8 @@
 # coding: UTF-8 
 
+default["serf"]["user"] = "serf"
+default["serf"]["group"] = "serf"
+
 default["serf"]["agent"] = {}
 default["serf"]["agent"]["event_handlers"] = []
 

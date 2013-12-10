@@ -7,10 +7,21 @@
 # Initializes the SerfHelper class by giving it access to `node`
 helper = SerfHelper.new self
 
+# Create serf user/group
+group node["serf"]["group"] do
+  action :create
+end
+  
+user node["serf"]["user"] do
+  gid node["serf"]["group"]
+end
+
 # Create serf directories
 
 # /opt/serf
 directory node["serf"]["base_directory"] do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   recursive true
   action :create
@@ -18,6 +29,8 @@ end
 
 # /opt/serf/event_handlers
 directory helper.getEventHandlersDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   recursive true
   action :create
@@ -25,6 +38,8 @@ end
 
 # /opt/serf/bin
 directory helper.getBinDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   recursive true
   action :create
@@ -32,6 +47,8 @@ end
 
 # /opt/serf/config
 directory helper.getHomeConfigDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   recursive true
   action :create
@@ -39,6 +56,8 @@ end
 
 # /opt/serf/log
 directory helper.getHomeLogDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   recursive true
   action :create
@@ -60,6 +79,8 @@ end
 remote_file helper.getZipFilePath do
   action :create_if_missing
   source node["serf"]["binary_url"]
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00644
   backup false
 end
@@ -71,6 +92,8 @@ end
 
 # Unzip serf binary
 execute "unzip serf binary" do
+  
+  user node["serf"]["user"]
   cwd helper.getBinDirectory
   
   # -q = quiet, -o = overwrite existing files
@@ -88,6 +111,8 @@ end
 
 # Ensure serf binary has correct permissions
 file helper.getSerfBinary do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
 end
 
@@ -99,6 +124,8 @@ end
 # Add entry to logrotate.d to log roll agents log files daily
 template "/etc/logrotate.d/serf_agent" do
   source  "serf_log_roll.erb"
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   variables(:agent_log_file => helper.getAgentLog)
   backup false
@@ -123,6 +150,8 @@ node["serf"]["event_handlers"].each do |event_handler|
     # Download event handler script
     remote_file event_handler_path do
       source event_handler["url"]
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
       mode 00755
       backup false
     end
@@ -137,6 +166,8 @@ end
 # Create serf_agent.json
 template helper.getAgentConfig do
   source  "serf_agent.json.erb"
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode 00755
   variables( :agent_json => helper.getAgentJson)
   backup false
@@ -145,11 +176,16 @@ end
 # Create init.d script
 template "/etc/init.d/serf" do
   source  "serf_service.erb"
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
   mode  00755
   variables(:helper => helper)
   backup false
   notifies :restart, "service[serf]"
 end
+
+# Ensure everything is owned by serf user/group
+execute "chown -R #{node["serf"]["user"]}:#{node["serf"]["group"]} #{node["serf"]["base_directory"]}"
 
 # Start agent service
 service "serf" do
