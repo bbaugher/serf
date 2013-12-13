@@ -65,5 +65,5 @@ Attributes
  * `node["serf"]["binary_url"]` : The full binary url of the Serf agent. If you override this value make sure to provide a valid and up to date value for `node["serf"]["version"]` (default=`File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"`)
  * `node["serf"]["base_directory"]` : The base directory Serf should be installed into (default="/opt/serf")
  * `node["serf"]["log_directory"]` : The directory of the Serf agent logs (default="/var/log/serf")
- * `node["serf"]["confdirectory"]` : The directory of the Serf agent config (default="/etc/serf")
+ * `node["serf"]["conf_directory"]` : The directory of the Serf agent config (default="/etc/serf")
  
