@@ -3,6 +3,8 @@ Serf Cookbook
 
 Installs and configures [Serf](http://www.serfdom.io/).
 
+View the [Change Log](CHANGELOG.md) to see what has changed.
+
 Supports
 --------
 
