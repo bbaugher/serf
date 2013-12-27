@@ -59,6 +59,8 @@ attribute.
 Attributes
 ----------
 
+ * `node["serf"]["user"]` : The user that owns the serf installation (default="serf")
+ * `node["serf"]["group"]` : The group that owns the serf installation (default="serf")
  * `node["serf"]["agent"][*]` : A hash of key/values that will be added to the agent's config file (default={}). Use [this doc](http://www.serfdom.io/docs/agent/options.html) to configure the agent.
  * `node["serf"]["event_handlers"]` : An array of hashes that represent [event handlers](http://www.serfdom.io/docs/agent/event-handlers.html). See 'Event Handlers' below for more details (default=[])
  * `node["serf"]["base_binary_url"]` : The base url used to download the binary zip (default="https://dl.bintray.com/mitchellh/serf/")
