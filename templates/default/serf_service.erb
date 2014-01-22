@@ -84,7 +84,7 @@ reload() {
   if [ -z "$FOUND_PID" ]; then
     echo "$NAME is not running" ; exit 1
   else
-    su -l $SERF_USER -c "kill -SIGHUP $FOUND_PID"
+    su -l $SERF_USER -c "kill -HUP $FOUND_PID"
     echo "Reloaded $NAME" 
   fi
 }
