@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+[0.4.1](https://github.com/bbaugher/serf/issues?milestone=6&state=closed)
+-------------------------------------------------------------------------
+
+  * [Bug] [Issue-18](https://github.com/bbaugher/serf/issues/18) : Reload serf agent with "kill -HUP" instead of broken "kill -SIGHUP".
+  * [Bug] [Issue-17](https://github.com/bbaugher/serf/issues/17) : Fixed logging of serf agent messages when /bin/sh is not a symlinked bash.
+
 [0.4.0](https://github.com/bbaugher/serf/issues?milestone=3&state=closed)
 -------------------------------------------------------------------------
 
