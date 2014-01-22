@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+[0.3](https://github.com/bbaugher/serf/issues?milestone=2&state=closed)
+-----
+
+ * Fixed bug where service script was using /bin/sh instead of /bin/bash
+ * Installation is now owned by the serf user
+
 0.2.1
 -----
 
