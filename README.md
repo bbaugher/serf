@@ -8,7 +8,7 @@ View the [Change Log](https://github.com/bbaugher/serf/blob/master/CHANGELOG.md)
 Supports
 --------
 
- * Serf >= 0.2 (uses the config file option)
+ * Serf >= 0.3 (uses config reloading via SIGHUP)
  * Linux OS'es
 
 Usage

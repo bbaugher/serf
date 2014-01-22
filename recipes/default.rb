@@ -171,6 +171,7 @@ template helper.getAgentConfig do
   mode 00755
   variables( :agent_json => helper.getAgentJson)
   backup false
+  notifies :reload, "service[serf]"
 end
 
 # Create init.d script
@@ -189,6 +190,6 @@ execute "chown -R #{node["serf"]["user"]}:#{node["serf"]["group"]} #{node["serf"
 
 # Start agent service
 service "serf" do
-  supports :status => true, :restart => true
+  supports :status => true, :restart => true, :reload => true
   action [ :enable, :start ]
 end

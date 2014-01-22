@@ -49,7 +49,7 @@ stop() {
       while [[ -n $FOUND_PID ]]; 
   	  do
         echo "Attempting to shutdown $NAME..."
-        kill -INT $FOUND_PID
+        su -l $SERF_USER -c "kill -INT $FOUND_PID"
       
         if [[ $? -ne 0 ]]; then
 	      echo "Error stopping $NAME"
@@ -79,6 +79,16 @@ status() {
   fi
 }
 
+reload() {
+  findPid
+  if [ -z "$FOUND_PID" ]; then
+    echo "$NAME is not running" ; exit 1
+  else
+    su -l $SERF_USER -c "kill -SIGHUP $FOUND_PID"
+    echo "Reloaded $NAME" 
+  fi
+}
+
 findPid() {
 	FOUND_PID=`pgrep -f $SERF_BINARY`
 }
@@ -97,8 +107,11 @@ case "$1" in
   status)
     status
   ;;
+  reload)
+    reload
+  ;;
   *)
-    echo "Usage: $0 {start|stop|restart|status}"
+    echo "Usage: $0 {start|stop|restart|status|reload}"
     exit 1
 esac
 
