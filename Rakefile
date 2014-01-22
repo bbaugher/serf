@@ -27,6 +27,12 @@ task :release do
   # Bump VERSION file
   versions = version.split "."
   versions[1] = versions[1].to_i + 1
+  
+  # Reset bug number if available
+  if versions.size == 3
+    versions[2] = 0
+  end
+  
   new_version = versions.join "."
   
   puts "Updating version from #{version} to #{new_version} ..."
