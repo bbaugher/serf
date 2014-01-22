@@ -3,7 +3,7 @@ Serf Cookbook
 
 Installs and configures [Serf](http://www.serfdom.io/).
 
-View the [Change Log](CHANGELOG.md) to see what has changed.
+View the [Change Log](https://github.com/bbaugher/serf/blob/master/CHANGELOG.md) to see what has changed.
 
 Supports
 --------
