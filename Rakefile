@@ -98,6 +98,10 @@ def update_change_log version
   ensure
     change_log.close
   end
+  
+  run_command "git add CHANGELOG.md"
+  run_command "git commit -m 'Updated change log for #{version}'"
+  run_command "git push origin HEAD"
 end
 
 def generate_milestone_markdown milestone

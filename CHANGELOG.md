@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[0.4.0](https://github.com/bbaugher/serf/issues?milestone=3&state=closed)
+-------------------------------------------------------------------------
+
+  * [Feature] [Issue-12](https://github.com/bbaugher/serf/issues/12) : Provide ability to reload configuration without restart
+
 [0.3.0](https://github.com/bbaugher/serf/issues?milestone=2&state=closed)
 -------------------------------------------------------------------------
 
