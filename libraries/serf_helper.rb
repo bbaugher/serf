@@ -48,7 +48,7 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
   end
   
   def getAgentJson
-    node["serf"]["agent"].to_hash.to_json
+    JSON.pretty_generate(node["serf"]["agent"].to_hash)
   end
   
   def getZipFilePath
