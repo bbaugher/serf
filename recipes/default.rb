@@ -140,7 +140,7 @@ node["serf"]["event_handlers"].each do |event_handler|
   
   event_handler_command = ""
   if event_handler.has_key? "event_type"
-    event_handler_option << "#{event_handler["event_type"]}="
+    event_handler_command << "#{event_handler["event_type"]}="
   end
   
   if event_handler.has_key? "url"
