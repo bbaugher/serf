@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+[0.4.2](https://github.com/bbaugher/serf/issues?milestone=8&state=closed)
+-------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-21](https://github.com/bbaugher/serf/issues/21) : License?
+  * [Bug] [Issue-20](https://github.com/bbaugher/serf/issues/20) : Event handlers attribute ignores type
+
 [0.4.1](https://github.com/bbaugher/serf/issues?milestone=6&state=closed)
 -------------------------------------------------------------------------
 
