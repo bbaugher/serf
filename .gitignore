@@ -1,4 +1,5 @@
 .project
 
 .vagrant
-Vagrantfile
+Vagrantfile.kitchen/
+.kitchen.local.yml
