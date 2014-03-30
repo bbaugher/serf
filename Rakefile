@@ -12,7 +12,7 @@ task :release do
   
   # Update change log
   puts "Updating change log ..."
-  #update_change_log version
+  update_change_log version
   puts "Change log updated!"
   
   # Share the cookbook

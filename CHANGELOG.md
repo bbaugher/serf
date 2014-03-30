@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+[0.5.0](https://github.com/bbaugher/serf/issues?milestone=7&state=closed)
+-------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-23](https://github.com/bbaugher/serf/issues/23) : Adding support for chkconfig.
+  * [Enhancement] [Issue-22](https://github.com/bbaugher/serf/issues/22) : Version normalization
+  * [Enhancement] [Issue-19](https://github.com/bbaugher/serf/issues/19) : Prettify serf agent json (humans too read configuration files).
+
 [0.4.2](https://github.com/bbaugher/serf/issues?milestone=8&state=closed)
 -------------------------------------------------------------------------
 
@@ -42,3 +49,4 @@ Change Log
 -------------------------------------------------------------------------
 
   * [Feature] [Issue-16](https://github.com/bbaugher/serf/issues/16) : Initial cookbook
+
