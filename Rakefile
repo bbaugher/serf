@@ -1,16 +1,18 @@
 # coding: UTF-8
 require 'octokit'
 
+VERSION_WITH_NAME_REGEX = /version\s*'\d+\.\d+\.\d+'/
+VERSION_REGEX = /\d+\.\d+\.\d+/
+
 REPO = "bbaugher/serf"
 
 task :release do
   
-  # Get current version
-  version = IO.read(File.join(File.dirname(__FILE__), 'VERSION')).chomp
+  version = cookbook_version
   
   # Update change log
   puts "Updating change log ..."
-  update_change_log version
+  #update_change_log version
   puts "Change log updated!"
   
   # Share the cookbook
@@ -24,7 +26,7 @@ task :release do
   run_command "git push origin #{version}"
   puts "Release tagged!"
   
-  # Bump VERSION file
+  # Bump version
   versions = version.split "."
   versions[1] = versions[1].to_i + 1
   
@@ -36,12 +38,12 @@ task :release do
   new_version = versions.join "."
   
   puts "Updating version from #{version} to #{new_version} ..."
-  File.open('VERSION', 'w') { |file| file.write(new_version) }
+  update_cookbook_version new_version
   puts "Version updated!"
   
   # Commit the updated VERSION file
   puts "Commiting the new version ..."
-  run_command "git add VERSION"
+  run_command "git add metadata.rb"
   run_command "git commit -m 'Released #{version} and bumped version to #{new_version}'"
   run_command "git push origin HEAD"
   puts "Version commited!"
@@ -76,6 +78,28 @@ task :build_change_log do
   ensure
     change_log.close
   end
+end
+
+def cookbook_version
+  # Read in the metadata file
+  metadata = IO.read(File.join(File.dirname(__FILE__), 'metadata.rb')).chomp
+  version_with_name = VERSION_WITH_NAME_REGEX.match(metadata)[0]
+  VERSION_REGEX.match(version_with_name)[0]
+end
+
+def update_cookbook_version version
+  # Read in the metadata file
+  metadata = IO.read(File.join(File.dirname(__FILE__), 'metadata.rb')).chomp
+  version_with_name = VERSION_WITH_NAME_REGEX.match(metadata)[0]
+  
+  index_to_version_info = metadata.index VERSION_WITH_NAME_REGEX
+  # Have to subtract 1 to not include the first '
+  index_to_version = version_with_name.index(VERSION_REGEX) - 1
+
+  File.open("metadata.rb", 'w') { |file| 
+    file.write metadata[0, index_to_version_info + index_to_version]
+    file.write "'#{version}'\n"
+  }
 end
 
 def update_change_log version
