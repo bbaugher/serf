@@ -1,6 +1,8 @@
 Serf Cookbook
 =============
 
+[![Cookbook Version](https://img.shields.io/cookbook/v/serf.svg)](https://community.opscode.com/cookbooks/serf)
+
 Installs and configures [Serf](http://www.serfdom.io/).
 
 View the [Change Log](https://github.com/bbaugher/serf/blob/master/CHANGELOG.md) to see what has changed.
