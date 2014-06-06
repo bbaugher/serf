@@ -17,8 +17,8 @@
 
 NAME="Serf Agent"
 SERF_BINARY=<%= @helper.getSerfBinary %>
-SERF_AGENT_LOG=<%= @helper.getAgentLog %>
-SERF_AGENT_CONF_FILE=<%= @helper.getAgentConfig %>
+SERF_AGENT_LOG=<%= @helper.getAgentLog(@agent_name) %>
+SERF_AGENT_CONF_FILE=<%= @helper.getAgentConfig(@agent_name) %>
 SERF_USER=<%= node["serf"]["user"] %>
 
 SLEEP_TIME=5

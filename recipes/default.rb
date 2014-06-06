@@ -137,14 +137,25 @@ node["serf"]["event_handlers"].each do |event_handler|
   unless event_handler.is_a? Hash
     raise "Event handler [#{event_handler}] is required to be a hash"
   end
+
+  # if there are specific agent names defined
+  # and there are event handlers not specifically assigned to an agent, raise an error
+  # also raise an error if event handler is not a hash
+  if node["serf"]["agents"].length > 0
+    unless event_handler.has_key?("agent_name")
+      raise "Cannot have unassigned event handlers if more that one agent is defined"
+    end
+  end
   
   event_handler_command = ""
   if event_handler.has_key? "event_type"
     event_handler_command << "#{event_handler["event_type"]}="
   end
+
+  agent_name = (event_handler["agent_name"] == nil) ? ""
   
   if event_handler.has_key? "url"
-    event_handler_path =  File.join helper.getEventHandlersDirectory, File.basename(event_handler["url"])
+    event_handler_path =  File.join helper.getEventHandlersDirectory, agent_name, File.basename(event_handler["url"])
     event_handler_command << event_handler_path
     
     # Download event handler script
@@ -160,36 +171,77 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] has no 'url'"
   end
   
-  node.default["serf"]["agent"]["event_handlers"] << event_handler_command
+  if event_handler["agent_name"] == nil
+    node.default["serf"]["agent"]["event_handlers"] << event_handler_command
+  else
+    node.default["serf"]["agents"][event_handler["agent_name"]]["event_handlers"] << event_handler_command
+  end
 end
 
 # Create serf_agent.json
-template helper.getAgentConfig do
-  source  "serf_agent.json.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  variables( :agent_json => helper.getAgentJson)
-  backup false
-  notifies :reload, "service[serf]"
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    template helper.getAgentConfig(name) do
+      source  "serf_agent.json.erb"
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode 00755
+      variables( :agent_json => helper.getAgentJson(name))
+      backup false
+      notifies :reload, "service[serf]"
+    end
+  end
+else
+  template helper.getAgentConfig(nil) do
+    source  "serf_agent.json.erb"
+    group node["serf"]["group"]
+    owner node["serf"]["user"]
+    mode 00755
+    variables( :agent_json => helper.getAgentJson(nil))
+    backup false
+    notifies :reload, "service[serf]"
+  end
 end
 
 # Create init.d script
-template "/etc/init.d/serf" do
-  source  "serf_service.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode  00755
-  variables(:helper => helper)
-  backup false
-  notifies :restart, "service[serf]"
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    template "/etc/init.d/#{name}" do
+      source  "serf_service.erb"
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode  00755
+      variables(:helper => helper, :agent_name => name)
+      backup false
+      notifies :restart, "service[serf]"
+    end
+  end
+else
+  template "/etc/init.d/serf" do
+    source  "serf_service.erb"
+    group node["serf"]["group"]
+    owner node["serf"]["user"]
+    mode  00755
+    variables(:helper => helper, :agent_name => nil)
+    backup false
+    notifies :restart, "service[serf]"
+  end
 end
 
 # Ensure everything is owned by serf user/group
 execute "chown -R #{node["serf"]["user"]}:#{node["serf"]["group"]} #{node["serf"]["base_directory"]}"
 
-# Start agent service
-service "serf" do
-  supports :status => true, :restart => true, :reload => true
-  action [ :enable, :start ]
+# Start agent services
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    service name do
+      supports :status => true, :restart => true, :reload => true
+      action [ :enable, :start ]
+    end
+  end
+else
+  service "serf" do
+    supports :status => true, :restart => true, :reload => true
+    action [ :enable, :start ]
+  end
 end

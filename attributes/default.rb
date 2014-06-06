@@ -3,6 +3,8 @@
 default["serf"]["user"] = "serf"
 default["serf"]["group"] = "serf"
 
+default["serf"]["agents"] = {}
+
 default["serf"]["agent"] = {}
 default["serf"]["agent"]["event_handlers"] = []
 
