@@ -26,6 +26,14 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
   def getSerfBinary
     File.join getBinDirectory, "serf"
   end
+
+  def getSerfAgentBinary(agent_name)
+    if agent_name.nil?
+      getSerfBinary
+    else
+      File.join getBinDirectory, agent_name
+    end
+  end
   
   def getEventHandlersDirectory
     File.join node["serf"]["base_directory"], "event_handlers"
@@ -72,7 +80,9 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
       return "NONE"
     end
     
-    versionOutput = `#{getSerfBinary} version`.chomp
+    cmd = Mixlib::ShellOut.new("#{getSerfBinary} version")
+    cmd.run_command
+    versionOutput = cmd.stdout.chomp
     serfMatch = SERF_VERSION_REGEX.match(versionOutput)
       
     if serfMatch.size == 0

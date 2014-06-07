@@ -46,21 +46,45 @@ directory helper.getBinDirectory do
 end
 
 # /opt/serf/config
-directory helper.getHomeConfigDirectory do
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  recursive true
-  action :create
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    directory File.join helper.getHomeConfigDirectory, name do
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode 00755
+      recursive true
+      action :create
+    end
+  end
+else
+  directory helper.getHomeConfigDirectory do
+    group node["serf"]["group"]
+    owner node["serf"]["user"]
+    mode 00755
+    recursive true
+    action :create
+  end
 end
 
 # /opt/serf/log
-directory helper.getHomeLogDirectory do
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  recursive true
-  action :create
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    directory File.join helper.getHomeLogDirectory, name do
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode 00755
+      recursive true
+      action :create
+    end
+  end
+else
+  directory helper.getHomeLogDirectory do
+    group node["serf"]["group"]
+    owner node["serf"]["user"]
+    mode 00755
+    recursive true
+    action :create
+  end
 end
 
 # Create unix expected directories (/etc/serf, /var/log/serf, ...)
@@ -98,14 +122,27 @@ execute "unzip serf binary" do
   
   # -q = quiet, -o = overwrite existing files
   command "unzip -qo #{helper.getZipFilePath}"
-  
-  notifies :restart, "service[serf]"
-  only_if do
-    currentVersion = helper.getSerfInstalledVersion
-    if currentVersion != node["serf"]["version"]
-      Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
+
+  if node["serf"]["agents"].length > 0
+    node["serf"]["agents"].each do | name, content |
+      notifies :restart, "service[#{name}]"
+      only_if do
+        currentVersion = helper.getSerfInstalledVersion
+        if currentVersion != node["serf"]["version"]
+          Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
+        end
+        currentVersion != node["serf"]["version"]
+      end
     end
-    currentVersion != node["serf"]["version"]
+  else
+    notifies :restart, "service[serf]"
+    only_if do
+      currentVersion = helper.getSerfInstalledVersion
+      if currentVersion != node["serf"]["version"]
+        Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
+      end
+      currentVersion != node["serf"]["version"]
+    end
   end
 end
 
@@ -121,14 +158,40 @@ link "/usr/bin/serf" do
   to helper.getSerfBinary
 end
 
+# add multiple agent symlinks if needed
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    link helper.getSerfAgentBinary(name) do
+      action :delete
+      only_if do ! File.exists?(helper.getSerfAgentBinary(name)) end
+    end
+    link helper.getSerfAgentBinary(name) do
+      to helper.getSerfBinary
+    end
+  end
+end
+
 # Add entry to logrotate.d to log roll agents log files daily
-template "/etc/logrotate.d/serf_agent" do
-  source  "serf_log_roll.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  variables(:agent_log_file => helper.getAgentLog)
-  backup false
+if node["serf"]["agents"].length > 0
+  node["serf"]["agents"].each do | name, content |
+    template "/etc/logrotate.d/serf_agent_#{name}" do
+      source  "serf_log_roll.erb"
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode 00755
+      variables(:agent_log_file => helper.getAgentLog(name))
+      backup false
+    end
+  end
+else
+  template "/etc/logrotate.d/serf_agent" do
+    source  "serf_log_roll.erb"
+    group node["serf"]["group"]
+    owner node["serf"]["user"]
+    mode 00755
+    variables(:agent_log_file => helper.getAgentLog(nil))
+    backup false
+  end
 end
 
 # Download and configure specified event handlers
@@ -142,7 +205,7 @@ node["serf"]["event_handlers"].each do |event_handler|
   # and there are event handlers not specifically assigned to an agent, raise an error
   # also raise an error if event handler is not a hash
   if node["serf"]["agents"].length > 0
-    unless event_handler.has_key?("agent_name")
+    unless event_handler.has_key?("agent_name") && node["serf"]["agents"].has_key(event_handler["agent_name"])
       raise "Cannot have unassigned event handlers if more that one agent is defined"
     end
   end
@@ -152,10 +215,10 @@ node["serf"]["event_handlers"].each do |event_handler|
     event_handler_command << "#{event_handler["event_type"]}="
   end
 
-  agent_name = (event_handler["agent_name"] == nil) ? ""
+  agent_name = (event_handler["agent_name"] == nil) ? "" : event_handler["agent_name"] 
   
   if event_handler.has_key? "url"
-    event_handler_path =  File.join helper.getEventHandlersDirectory, agent_name, File.basename(event_handler["url"])
+    event_handler_path = File.join helper.getEventHandlersDirectory, agent_name, File.basename(event_handler["url"])
     event_handler_command << event_handler_path
     
     # Download event handler script
@@ -174,7 +237,7 @@ node["serf"]["event_handlers"].each do |event_handler|
   if event_handler["agent_name"] == nil
     node.default["serf"]["agent"]["event_handlers"] << event_handler_command
   else
-    node.default["serf"]["agents"][event_handler["agent_name"]]["event_handlers"] << event_handler_command
+    node.default["serf"]["agents"][agent_name]["event_handlers"] << event_handler_command
   end
 end
 
@@ -188,7 +251,7 @@ if node["serf"]["agents"].length > 0
       mode 00755
       variables( :agent_json => helper.getAgentJson(name))
       backup false
-      notifies :reload, "service[serf]"
+      notifies :reload, "service[#{name}]"
     end
   end
 else
@@ -213,7 +276,7 @@ if node["serf"]["agents"].length > 0
       mode  00755
       variables(:helper => helper, :agent_name => name)
       backup false
-      notifies :restart, "service[serf]"
+      notifies :restart, "service[#{name}]"
     end
   end
 else
@@ -222,7 +285,7 @@ else
     group node["serf"]["group"]
     owner node["serf"]["user"]
     mode  00755
-    variables(:helper => helper, :agent_name => nil)
+    variables(:helper => helper, :agent_name => nil, :provides => "serf")
     backup false
     notifies :restart, "service[serf]"
   end
