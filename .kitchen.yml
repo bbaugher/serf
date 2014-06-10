@@ -15,13 +15,26 @@ suites:
     run_list:
       - recipe[serf::default]
     attributes:
+  - name: named
+    run_list:
+      - recipe[serf::default]
+    attributes:
+      serf:
+        agent:
+          name: "named_agent"
+          node_name: "named_agent_node"
+          tags: 
+              role: "named_agent_role"
+          log_level: "debug"
+          profile: "lan"
   - name: multiagent
     run_list:
       - recipe[serf::default]
     attributes: 
       serf:
-        agents:
-          agent_1: 
+        agent:
+          - 
+            name: "agent_1" 
             node_name: "first_agent"
             tags: 
               role: "first"
@@ -29,7 +42,8 @@ suites:
             rpc_addr: "127.0.0.1:7373"
             log_level: "debug"
             profile: "lan"
-          agent_2: 
+          - 
+            name: "agent_2" 
             node_name: "second_agent"
             tags: 
               role: "second"
@@ -37,7 +51,8 @@ suites:
             rpc_addr: "127.0.0.1:7372"
             log_level: "debug"
             profile: "lan"
-          agent_3: 
+          - 
+            name: "agent_3" 
             node_name: "third_agent"
             tags: 
               role: "third"

@@ -26,14 +26,6 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
   def getSerfBinary
     File.join getBinDirectory, "serf"
   end
-
-  def getSerfAgentBinary(agent_name)
-    if agent_name.nil?
-      getSerfBinary
-    else
-      File.join getBinDirectory, agent_name
-    end
-  end
   
   def getEventHandlersDirectory
     File.join node["serf"]["base_directory"], "event_handlers"
@@ -43,32 +35,20 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
     File.join node["serf"]["base_directory"], "config"
   end
   
-  def getAgentConfig(agent_name)
-    if agent_name.nil?
-      File.join getHomeConfigDirectory, "serf_agent.json"
-    else
-      File.join getHomeConfigDirectory, agent_name, "serf_agent.json"
-    end
+  def getAgentConfig
+    File.join getHomeConfigDirectory, "serf_agent.json"
   end
   
   def getHomeLogDirectory
     File.join node["serf"]["base_directory"], "logs"
   end
   
-  def getAgentLog(agent_name)
-    if agent_name.nil?
-      File.join getHomeLogDirectory, "agent.log"
-    else
-      File.join getHomeLogDirectory, agent_name, "agent.log"
-    end
+  def getAgentLog
+    File.join getHomeLogDirectory, "agent.log"
   end
   
-  def getAgentJson(agent_name)
-    if agent_name.nil?
-      JSON.pretty_generate(node["serf"]["agent"].to_hash)
-    else
-      JSON.pretty_generate(node["serf"]["agents"][agent_name].to_hash)
-    end
+  def getAgentJson
+    JSON.pretty_generate(node["serf"]["agent"].to_hash)
   end
   
   def getZipFilePath
@@ -80,9 +60,7 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
       return "NONE"
     end
     
-    cmd = Mixlib::ShellOut.new("#{getSerfBinary} version")
-    cmd.run_command
-    versionOutput = cmd.stdout.chomp
+    versionOutput = `#{getSerfBinary} version`.chomp
     serfMatch = SERF_VERSION_REGEX.match(versionOutput)
       
     if serfMatch.size == 0

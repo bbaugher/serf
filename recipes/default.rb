@@ -46,45 +46,21 @@ directory helper.getBinDirectory do
 end
 
 # /opt/serf/config
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    directory File.join helper.getHomeConfigDirectory, name do
-      group node["serf"]["group"]
-      owner node["serf"]["user"]
-      mode 00755
-      recursive true
-      action :create
-    end
-  end
-else
-  directory helper.getHomeConfigDirectory do
-    group node["serf"]["group"]
-    owner node["serf"]["user"]
-    mode 00755
-    recursive true
-    action :create
-  end
+directory helper.getHomeConfigDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
+  mode 00755
+  recursive true
+  action :create
 end
 
 # /opt/serf/log
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    directory File.join helper.getHomeLogDirectory, name do
-      group node["serf"]["group"]
-      owner node["serf"]["user"]
-      mode 00755
-      recursive true
-      action :create
-    end
-  end
-else
-  directory helper.getHomeLogDirectory do
-    group node["serf"]["group"]
-    owner node["serf"]["user"]
-    mode 00755
-    recursive true
-    action :create
-  end
+directory helper.getHomeLogDirectory do
+  group node["serf"]["group"]
+  owner node["serf"]["user"]
+  mode 00755
+  recursive true
+  action :create
 end
 
 # Create unix expected directories (/etc/serf, /var/log/serf, ...)
@@ -114,6 +90,17 @@ package "unzip" do
   action :install
 end
 
+# check validity of agent parameter
+agents = nil 
+if node["serf"]["agent"].is_a? Hash
+  agents = [ node["serf"]["agent"] ]
+  agents[0]["name"] = "serf"
+else
+   raise "'agent' attribute needs to be either a hash or an array" unless node["serf"]["agent"].is_a? Array
+   agents = node["serf"]["agent"]
+end
+
+
 # Unzip serf binary
 execute "unzip serf binary" do
   
@@ -122,28 +109,34 @@ execute "unzip serf binary" do
   
   # -q = quiet, -o = overwrite existing files
   command "unzip -qo #{helper.getZipFilePath}"
-
-  if node["serf"]["agents"].length > 0
-    node["serf"]["agents"].each do | name, content |
-      notifies :restart, "service[#{name}]"
-      only_if do
-        currentVersion = helper.getSerfInstalledVersion
-        if currentVersion != node["serf"]["version"]
-          Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
-        end
-        currentVersion != node["serf"]["version"]
-      end
-    end
-  else
-    notifies :restart, "service[serf]"
-    only_if do
+  notifies :run, "ruby_block[reload_agents]", :immediately 
+  only_if { 
       currentVersion = helper.getSerfInstalledVersion
       if currentVersion != node["serf"]["version"]
         Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
       end
       currentVersion != node["serf"]["version"]
-    end
+  }
+end
+
+ruby_block "reload_agents" do
+  block do
+    agents.each { |agent|
+      raise "Each serf agent must have a name" unless agent.has_key?("name")
+
+      serf_agent = Chef::Resource::SerfAgent.new(agent["name"], run_context)
+      serf_agent.params = {
+        :user => node["serf"]["user"],
+        :group => node["serf"]["group"],
+        :base_directory => node["serf"]["base_directory"],
+        :log_directory => node["serf"]["log_directory"],
+        :conf_directory => node["serf"]["conf_directory"],
+        :agent => agent
+      }
+      serf_agent.run_action(:restart)
+    }
   end
+  action :nothing 
 end
 
 # Ensure serf binary has correct permissions
@@ -158,42 +151,6 @@ link "/usr/bin/serf" do
   to helper.getSerfBinary
 end
 
-# add multiple agent symlinks if needed
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    link helper.getSerfAgentBinary(name) do
-      action :delete
-      only_if do ! File.exists?(helper.getSerfAgentBinary(name)) end
-    end
-    link helper.getSerfAgentBinary(name) do
-      to helper.getSerfBinary
-    end
-  end
-end
-
-# Add entry to logrotate.d to log roll agents log files daily
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    template "/etc/logrotate.d/serf_agent_#{name}" do
-      source  "serf_log_roll.erb"
-      group node["serf"]["group"]
-      owner node["serf"]["user"]
-      mode 00755
-      variables(:agent_log_file => helper.getAgentLog(name))
-      backup false
-    end
-  end
-else
-  template "/etc/logrotate.d/serf_agent" do
-    source  "serf_log_roll.erb"
-    group node["serf"]["group"]
-    owner node["serf"]["user"]
-    mode 00755
-    variables(:agent_log_file => helper.getAgentLog(nil))
-    backup false
-  end
-end
-
 # Download and configure specified event handlers
 node["serf"]["event_handlers"].each do |event_handler|
   
@@ -201,24 +158,17 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] is required to be a hash"
   end
 
-  # if there are specific agent names defined
-  # and there are event handlers not specifically assigned to an agent, raise an error
-  # also raise an error if event handler is not a hash
-  if node["serf"]["agents"].length > 0
-    unless event_handler.has_key?("agent_name") && node["serf"]["agents"].has_key(event_handler["agent_name"])
-      raise "Cannot have unassigned event handlers if more that one agent is defined"
-    end
+  if agents.length() == 1
+    event_handler["name"] = "serf" unless event_handler.has_key?("name")
   end
   
   event_handler_command = ""
   if event_handler.has_key? "event_type"
     event_handler_command << "#{event_handler["event_type"]}="
   end
-
-  agent_name = (event_handler["agent_name"] == nil) ? "" : event_handler["agent_name"] 
   
   if event_handler.has_key? "url"
-    event_handler_path = File.join helper.getEventHandlersDirectory, agent_name, File.basename(event_handler["url"])
+    event_handler_path = File.join(helper.getEventHandlersDirectory, event_handler["name"], File.basename(event_handler["url"]))
     event_handler_command << event_handler_path
     
     # Download event handler script
@@ -233,78 +183,19 @@ node["serf"]["event_handlers"].each do |event_handler|
   else
     raise "Event handler [#{event_handler}] has no 'url'"
   end
-  
-  if event_handler["agent_name"] == nil
-    node.default["serf"]["agent"]["event_handlers"] << event_handler_command
-  else
-    node.default["serf"]["agents"][agent_name]["event_handlers"] << event_handler_command
-  end
+
+  agents.find { |agent| agent["name"] == event_handler["name"] }["event_handlers"] << event_handler_command
 end
 
-# Create serf_agent.json
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    template helper.getAgentConfig(name) do
-      source  "serf_agent.json.erb"
-      group node["serf"]["group"]
-      owner node["serf"]["user"]
-      mode 00755
-      variables( :agent_json => helper.getAgentJson(name))
-      backup false
-      notifies :reload, "service[#{name}]"
-    end
+# install agents
+agents.each { |agent|
+  serf_agent agent["name"] do
+    user            node["serf"]["user"]
+    group           node["serf"]["group"]
+    base_directory  node["serf"]["base_directory"]
+    log_directory   node["serf"]["log_directory"]
+    conf_directory  node["serf"]["conf_directory"]
+    agent           agent
+    action [ :create, :start ] 
   end
-else
-  template helper.getAgentConfig(nil) do
-    source  "serf_agent.json.erb"
-    group node["serf"]["group"]
-    owner node["serf"]["user"]
-    mode 00755
-    variables( :agent_json => helper.getAgentJson(nil))
-    backup false
-    notifies :reload, "service[serf]"
-  end
-end
-
-# Create init.d script
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    template "/etc/init.d/#{name}" do
-      source  "serf_service.erb"
-      group node["serf"]["group"]
-      owner node["serf"]["user"]
-      mode  00755
-      variables(:helper => helper, :agent_name => name)
-      backup false
-      notifies :restart, "service[#{name}]"
-    end
-  end
-else
-  template "/etc/init.d/serf" do
-    source  "serf_service.erb"
-    group node["serf"]["group"]
-    owner node["serf"]["user"]
-    mode  00755
-    variables(:helper => helper, :agent_name => nil, :provides => "serf")
-    backup false
-    notifies :restart, "service[serf]"
-  end
-end
-
-# Ensure everything is owned by serf user/group
-execute "chown -R #{node["serf"]["user"]}:#{node["serf"]["group"]} #{node["serf"]["base_directory"]}"
-
-# Start agent services
-if node["serf"]["agents"].length > 0
-  node["serf"]["agents"].each do | name, content |
-    service name do
-      supports :status => true, :restart => true, :reload => true
-      action [ :enable, :start ]
-    end
-  end
-else
-  service "serf" do
-    supports :status => true, :restart => true, :reload => true
-    action [ :enable, :start ]
-  end
-end
+}
