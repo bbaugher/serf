@@ -31,7 +31,7 @@ By default the installation will look like,
     /etc/serf/*           - Link to all of serf's config files
     /var/log/serf/*       - Link to all of serf's log files
     /etc/init.d/serf      - An init.d script to start/stop the agent. You can use service 
-    				        serf [start|stop|restart|status] instead
+                    serf [start|stop|restart|status] instead
 
 Event Handlers
 --------------
@@ -44,6 +44,7 @@ attribute is the following,
 
     [
       {
+        "agent_name": "your_serf_agent", #REQUIRED only if using node["serf"]["agents"]
         "url" : "URL", # REQUIRED
         "event_type" : "EVENT_TYPE" #OPTIONAL
       },
@@ -56,8 +57,8 @@ Each event handler must have a unique name.
 The `event_type` value filters the event handler for certain events. Use [this doc](http://www.serfdom.io/docs/agent/event-handlers.html) 
 to figure out the `event_type` you need.
 
-It is also possible to add event handlers via the attribute `node["serf"]["agent"]["event_handlers"]`. The `node["serf"]["event_handlers"]`
-helps with the deployment of the event handler file itself and will add the event handler to the `node["serf"]["agent"]["event_handlers"]`
+It is also possible to add event handlers via the attribute `node["serf"]["agent"]["event_handlers"]` and `node["serf"]["agents"][your_agent_name]["event_handlers"]`. The `node["serf"]["event_handlers"]`
+helps with the deployment of the event handler file itself and will add the event handler to the `node["serf"]["agent"]["event_handlers"]` or `node["serf"]["agents"][your_agent_name]["event_handlers"]`
 attribute.
 
 Attributes
@@ -66,6 +67,7 @@ Attributes
  * `node["serf"]["user"]` : The user that owns the serf installation (default="serf")
  * `node["serf"]["group"]` : The group that owns the serf installation (default="serf")
  * `node["serf"]["agent"][*]` : A hash of key/values that will be added to the agent's config file (default={}). Use [this doc](http://www.serfdom.io/docs/agent/options.html) to configure the agent.
+ * `node["serf"]["agents"]` : A hash of agent name and `node["serf"]["agent"][*]` options. Used for specifying multiple agents on a single box. Keep in mind all of the RPC and bind [options](http://www.serfdom.io/docs/agent/options.html) that need to be set for multiple serf agents on a single machine.
  * `node["serf"]["event_handlers"]` : An array of hashes that represent [event handlers](http://www.serfdom.io/docs/agent/event-handlers.html). See 'Event Handlers' above for more details (default=[])
  * `node["serf"]["base_binary_url"]` : The base url used to download the binary zip (default="https://dl.bintray.com/mitchellh/serf/")
  * `node["serf"]["version"]` : The version of the Serf agent to install (default="0.3.0")

@@ -90,6 +90,17 @@ package "unzip" do
   action :install
 end
 
+# check validity of agent parameter
+agents = nil 
+if node["serf"]["agent"].is_a? Hash
+  node.default["serf"]["agent"]["name"] = "serf"
+  agents = [ node["serf"]["agent"] ]
+else
+   raise "'agent' attribute needs to be either a hash or an array" unless node["serf"]["agent"].is_a? Array
+   agents = node["serf"]["agent"]
+end
+
+
 # Unzip serf binary
 execute "unzip serf binary" do
   
@@ -98,15 +109,32 @@ execute "unzip serf binary" do
   
   # -q = quiet, -o = overwrite existing files
   command "unzip -qo #{helper.getZipFilePath}"
-  
-  notifies :restart, "service[serf]"
-  only_if do
-    currentVersion = helper.getSerfInstalledVersion
-    if currentVersion != node["serf"]["version"]
-      Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
-    end
-    currentVersion != node["serf"]["version"]
+  notifies :run, "ruby_block[reload_agents]", :immediately 
+  only_if { 
+      currentVersion = helper.getSerfInstalledVersion
+      if currentVersion != node["serf"]["version"]
+        Chef::Log.info "Changing Serf Installation from [#{currentVersion}] to [#{node["serf"]["version"]}]"
+      end
+      currentVersion != node["serf"]["version"]
+  }
+end
+
+ruby_block "reload_agents" do
+  block do
+    agents.each { |agent|
+      raise "Each serf agent must have a name" unless agent.has_key?("name")
+
+      serf_agent = Chef::Resource::SerfAgent.new(agent["name"], run_context)
+      serf_agent.user(node["serf"]["user"])
+      serf_agent.group(node["serf"]["group"])
+      serf_agent.base_directory(node["serf"]["base_directory"])
+      serf_agent.log_directory(node["serf"]["log_directory"])
+      serf_agent.conf_directory(node["serf"]["conf_directory"])
+      serf_agent.agent(agent)
+      serf_agent.run_action(:restart)
+    }
   end
+  action :nothing 
 end
 
 # Ensure serf binary has correct permissions
@@ -121,21 +149,15 @@ link "/usr/bin/serf" do
   to helper.getSerfBinary
 end
 
-# Add entry to logrotate.d to log roll agents log files daily
-template "/etc/logrotate.d/serf_agent" do
-  source  "serf_log_roll.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  variables(:agent_log_file => helper.getAgentLog)
-  backup false
-end
-
 # Download and configure specified event handlers
 node["serf"]["event_handlers"].each do |event_handler|
   
   unless event_handler.is_a? Hash
     raise "Event handler [#{event_handler}] is required to be a hash"
+  end
+
+  if agents.length() == 1
+    event_handler["name"] = "serf" unless event_handler.has_key?("name")
   end
   
   event_handler_command = ""
@@ -144,7 +166,7 @@ node["serf"]["event_handlers"].each do |event_handler|
   end
   
   if event_handler.has_key? "url"
-    event_handler_path =  File.join helper.getEventHandlersDirectory, File.basename(event_handler["url"])
+    event_handler_path = File.join(helper.getEventHandlersDirectory, event_handler["name"], File.basename(event_handler["url"]))
     event_handler_command << event_handler_path
     
     # Download event handler script
@@ -159,37 +181,19 @@ node["serf"]["event_handlers"].each do |event_handler|
   else
     raise "Event handler [#{event_handler}] has no 'url'"
   end
-  
-  node.default["serf"]["agent"]["event_handlers"] << event_handler_command
+
+  agents.find { |agent| agent["name"] == event_handler["name"] }["event_handlers"] << event_handler_command
 end
 
-# Create serf_agent.json
-template helper.getAgentConfig do
-  source  "serf_agent.json.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  variables( :agent_json => helper.getAgentJson)
-  backup false
-  notifies :reload, "service[serf]"
-end
-
-# Create init.d script
-template "/etc/init.d/serf" do
-  source  "serf_service.erb"
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode  00755
-  variables(:helper => helper)
-  backup false
-  notifies :restart, "service[serf]"
-end
-
-# Ensure everything is owned by serf user/group
-execute "chown -R #{node["serf"]["user"]}:#{node["serf"]["group"]} #{node["serf"]["base_directory"]}"
-
-# Start agent service
-service "serf" do
-  supports :status => true, :restart => true, :reload => true
-  action [ :enable, :start ]
-end
+# install agents
+agents.each { |agent|
+  serf_agent agent["name"] do
+    user            node["serf"]["user"]
+    group           node["serf"]["group"]
+    base_directory  node["serf"]["base_directory"]
+    log_directory   node["serf"]["log_directory"]
+    conf_directory  node["serf"]["conf_directory"]
+    agent           agent
+    action [ :create, :start ] 
+  end
+}

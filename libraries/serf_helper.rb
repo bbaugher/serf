@@ -35,20 +35,8 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
     File.join node["serf"]["base_directory"], "config"
   end
   
-  def getAgentConfig
-    File.join getHomeConfigDirectory, "serf_agent.json"
-  end
-  
   def getHomeLogDirectory
     File.join node["serf"]["base_directory"], "logs"
-  end
-  
-  def getAgentLog
-    File.join getHomeLogDirectory, "agent.log"
-  end
-  
-  def getAgentJson
-    JSON.pretty_generate(node["serf"]["agent"].to_hash)
   end
   
   def getZipFilePath
