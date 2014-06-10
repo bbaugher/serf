@@ -75,14 +75,17 @@ end
 private
     def agent_exists?
         return false unless ::File.exist?(::File.join(current_resource.conf_directory, "#{current_resource.name}.json") )
-        return false unless ::File.exist?(::File.join(new_resource.conf_directory, "#{new_resource.name}.json") )
+        return false unless ::File.exist?(::File.join("/etc/init.d", "#{current_resource.name}") )
+        return false unless ::File.exist?(::File.join("/etc/logrotate.d/", "serf_agent_#{current_resource.name}") )
         current_agent = JSON.parse(::File.read(::File.join(current_resource.conf_directory, "#{current_resource.name}.json") ));
         new_resource.agent == current_agent
     end
 
     def create_serf_agent
-        link ::File.join(new_resource.base_directory, new_resource.name) do
-          to ::File.join(new_resource.base_directory, "serf")
+        if new_resource.name != "serf"
+            link ::File.join(new_resource.base_directory, "bin", new_resource.name) do
+              to ::File.join(new_resource.base_directory, "bin", "serf")
+            end
         end
 
         template "/etc/logrotate.d/serf_agent_#{new_resource.name}" do
@@ -94,12 +97,17 @@ private
             backup false
         end
 
+        service new_resource.name do
+            supports :status => true, :restart => true, :reload => true
+            action :nothing
+        end
+
         template ::File.join(new_resource.conf_directory, "#{new_resource.name}.json") do
             source  "serf_agent.json.erb"
             group new_resource.group
             owner new_resource.user
             mode 00755
-            variables( :agent_json => new_resource.agent)
+            variables( :agent_json => JSON.pretty_generate(new_resource.agent.to_hash.reject {|key, value| key == "name"}) )
             backup false
             notifies :reload, "service[#{new_resource.name}]"
         end
@@ -111,7 +119,7 @@ private
             mode  00755
             variables(
                 :serf_name => new_resource.name, 
-                :serf_binary => ::File.join(new_resource.base_directory, "serf"), 
+                :serf_binary => ::File.join(new_resource.base_directory, "bin", new_resource.name), 
                 :serf_log => ::File.join(new_resource.log_directory, "#{current_resource.name}.log"),
                 :serf_conf => ::File.join(new_resource.conf_directory, "#{new_resource.name}.json"),
                 :serf_user => new_resource.user)
@@ -124,20 +132,20 @@ private
     end
 
     def stop_serf_agent
-        service current_resource.name do
+        service new_resource.name do
             action :stop
         end
     end
 
     def start_serf_agent
-        service name do
+        service new_resource.name do
             supports :status => true, :restart => true, :reload => true
             action [ :enable, :start ]
         end
     end
 
     def restart_serf_agent
-        service name do
+        service new_resource.name do
             supports :status => true, :restart => true, :reload => true
             action [ :stop, :reload, :start ]
         end
@@ -146,7 +154,7 @@ private
     def delete_serf_agent
         stop_serf_agent
 
-        link ::File.join(current_resource.base_directory, current_resource.name) do
+        link ::File.join(current_resource.base_directory, "bin", current_resource.name) do
           action :delete
         end
 

@@ -93,8 +93,8 @@ end
 # check validity of agent parameter
 agents = nil 
 if node["serf"]["agent"].is_a? Hash
+  node.default["serf"]["agent"]["name"] = "serf"
   agents = [ node["serf"]["agent"] ]
-  agents[0]["name"] = "serf"
 else
    raise "'agent' attribute needs to be either a hash or an array" unless node["serf"]["agent"].is_a? Array
    agents = node["serf"]["agent"]
@@ -125,14 +125,12 @@ ruby_block "reload_agents" do
       raise "Each serf agent must have a name" unless agent.has_key?("name")
 
       serf_agent = Chef::Resource::SerfAgent.new(agent["name"], run_context)
-      serf_agent.params = {
-        :user => node["serf"]["user"],
-        :group => node["serf"]["group"],
-        :base_directory => node["serf"]["base_directory"],
-        :log_directory => node["serf"]["log_directory"],
-        :conf_directory => node["serf"]["conf_directory"],
-        :agent => agent
-      }
+      serf_agent.user(node["serf"]["user"])
+      serf_agent.group(node["serf"]["group"])
+      serf_agent.base_directory(node["serf"]["base_directory"])
+      serf_agent.log_directory(node["serf"]["log_directory"])
+      serf_agent.conf_directory(node["serf"]["conf_directory"])
+      serf_agent.agent(agent)
       serf_agent.run_action(:restart)
     }
   end

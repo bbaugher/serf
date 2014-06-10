@@ -32,6 +32,7 @@ suites:
       - recipe[serf::default]
     attributes: 
       serf:
+        version: "0.6.1"
         agent:
           - 
             name: "agent_1" 
