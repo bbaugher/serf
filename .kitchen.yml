@@ -20,22 +20,39 @@ suites:
       - recipe[serf::default]
     attributes:
       serf:
+        event_handlers: 
+          -
+            name: "named_agent"
+            url: https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
+            event_type: "user:rvm"
         agent:
-          name: "named_agent"
-          node_name: "named_agent_node"
-          tags: 
-              role: "named_agent_role"
-          log_level: "debug"
-          profile: "lan"
+          named_agent:
+            node_name: "named_agent_node"
+            tags: 
+                role: "named_agent_role"
+            log_level: "debug"
+            profile: "lan"
   - name: multiagent
     run_list:
       - recipe[serf::default]
     attributes: 
       serf:
-        version: "0.6.1"
+        version: "0.6.1" 
+        event_handlers: 
+          -
+            name: "agent_1"
+            url: https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
+            event_type: "user:rvm1"
+          -
+            name: "agent_2"
+            url: https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
+            event_type: "user:rvm2"
+          -
+            name: "agent_3"
+            url: https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
+            event_type: "user:rvm3"
         agent:
-          - 
-            name: "agent_1" 
+          agent_1: 
             node_name: "first_agent"
             tags: 
               role: "first"
@@ -43,8 +60,7 @@ suites:
             rpc_addr: "127.0.0.1:7373"
             log_level: "debug"
             profile: "lan"
-          - 
-            name: "agent_2" 
+          agent_2: 
             node_name: "second_agent"
             tags: 
               role: "second"
@@ -52,8 +68,7 @@ suites:
             rpc_addr: "127.0.0.1:7372"
             log_level: "debug"
             profile: "lan"
-          - 
-            name: "agent_3" 
+          agent_3: 
             node_name: "third_agent"
             tags: 
               role: "third"

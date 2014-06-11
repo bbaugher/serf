@@ -27,15 +27,6 @@ directory node["serf"]["base_directory"] do
   action :create
 end
 
-# /opt/serf/event_handlers
-directory helper.getEventHandlersDirectory do
-  group node["serf"]["group"]
-  owner node["serf"]["user"]
-  mode 00755
-  recursive true
-  action :create
-end
-
 # /opt/serf/bin
 directory helper.getBinDirectory do
   group node["serf"]["group"]
@@ -91,15 +82,13 @@ package "unzip" do
 end
 
 # check validity of agent parameter
-agents = nil 
-if node["serf"]["agent"].is_a? Hash
-  node.default["serf"]["agent"]["name"] = "serf"
-  agents = [ node["serf"]["agent"] ]
-else
-   raise "'agent' attribute needs to be either a hash or an array" unless node["serf"]["agent"].is_a? Array
-   agents = node["serf"]["agent"]
+raise "'agent' attribute needs to be a hash" unless node["serf"]["agent"].is_a? Hash
+# convert to { :name => { agent_hash } } form if not that already
+if node["serf"]["agent"].select { |k,v| !v.is_a? Hash }.length > 0
+  node.default["serf"]["agent"] = { "serf" => node["serf"]["agent"].to_hash }
+elsif node["serf"]["agent"].length == 0
+  node.default["serf"]["agent"] = { "serf" => {} }
 end
-
 
 # Unzip serf binary
 execute "unzip serf binary" do
@@ -121,18 +110,17 @@ end
 
 ruby_block "reload_agents" do
   block do
-    agents.each { |agent|
-      raise "Each serf agent must have a name" unless agent.has_key?("name")
+    node["serf"]["agent"].each do |agent_name, agent_hash|
 
-      serf_agent = Chef::Resource::SerfAgent.new(agent["name"], run_context)
+      serf_agent = Chef::Resource::SerfAgent.new(agent_name.to_s, run_context)
       serf_agent.user(node["serf"]["user"])
       serf_agent.group(node["serf"]["group"])
       serf_agent.base_directory(node["serf"]["base_directory"])
       serf_agent.log_directory(node["serf"]["log_directory"])
       serf_agent.conf_directory(node["serf"]["conf_directory"])
-      serf_agent.agent(agent)
+      serf_agent.agent(agent_hash)
       serf_agent.run_action(:restart)
-    }
+    end
   end
   action :nothing 
 end
@@ -156,9 +144,9 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] is required to be a hash"
   end
 
-  if agents.length() == 1
-    event_handler["name"] = "serf" unless event_handler.has_key?("name")
-  end
+  agent_name = "serf"
+  agent_name = event_handler["name"] if event_handler.has_key?("name")
+  raise "Event handler must have a name matching an agent" unless node.default["serf"]["agent"][agent_name] != nil
   
   event_handler_command = ""
   if event_handler.has_key? "event_type"
@@ -166,10 +154,17 @@ node["serf"]["event_handlers"].each do |event_handler|
   end
   
   if event_handler.has_key? "url"
-    event_handler_path = File.join(helper.getEventHandlersDirectory, event_handler["name"], File.basename(event_handler["url"]))
+    event_handler_path = File.join(helper.getEventHandlersDirectory, agent_name, File.basename(event_handler["url"]))
     event_handler_command << event_handler_path
     
     # Download event handler script
+    directory ::File.join(helper.getEventHandlersDirectory, agent_name) do
+      group node["serf"]["group"]
+      owner node["serf"]["user"]
+      mode 00755
+      recursive true
+      action :create
+    end
     remote_file event_handler_path do
       source event_handler["url"]
       group node["serf"]["group"]
@@ -182,18 +177,21 @@ node["serf"]["event_handlers"].each do |event_handler|
     raise "Event handler [#{event_handler}] has no 'url'"
   end
 
-  agents.find { |agent| agent["name"] == event_handler["name"] }["event_handlers"] << event_handler_command
+  # find the right agent hash and add the event handler to it.
+  node.default["serf"]["agent"][agent_name]["event_handlers"] = Array.new if node.default["serf"]["agent"][agent_name]["event_handlers"].is_nil?
+  node.default["serf"]["agent"][agent_name]["event_handlers"] << event_handler_command
+
 end
 
 # install agents
-agents.each { |agent|
-  serf_agent agent["name"] do
+node["serf"]["agent"].each do |agent_name, agent_hash|
+  serf_agent agent_name.to_s do
     user            node["serf"]["user"]
     group           node["serf"]["group"]
     base_directory  node["serf"]["base_directory"]
     log_directory   node["serf"]["log_directory"]
     conf_directory  node["serf"]["conf_directory"]
-    agent           agent
+    agent           agent_hash
     action [ :create, :start ] 
   end
-}
+end
