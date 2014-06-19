@@ -109,7 +109,7 @@ private
             mode 00755
             variables( :agent_json => JSON.pretty_generate(new_resource.agent.to_hash.reject {|key, value| key == "name"}) )
             backup false
-            notifies :reload, "service[#{new_resource.name}]"
+            notifies :restart, "service[#{new_resource.name}]"
         end
 
         template "/etc/init.d/#{new_resource.name}" do
