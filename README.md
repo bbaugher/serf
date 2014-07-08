@@ -70,7 +70,7 @@ The `serf_event` LWRP resource dispatches a custom user event into a Serf cluste
 
 #### Attribute Parameters
 - event_name: name attribute. The name of the event to send
-- payload: Event's payload. Any string you want.
+- payload: Optional event's payload. Any string you want.
 - coalesce: Coalesce option. `true` by default
 - rpc_addr: Address of serf node to connect for event dispatching. Local node by default.
 - rpc_auth: RPC auth token. If not set, `node['serf']['agent']['rpc_auth']` will be used.
@@ -91,11 +91,11 @@ It would look like this in serf log:
 ```
 2014/07/08 22:53:07 [INFO] agent: Received event: user-event: deploy
 Event Info:
-	Coalesce: true
-	Event: "user"
-	LTime: 7
-	Name: "deploy"
-	Payload: []byte{0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30}
+    Coalesce: true
+    Event: "user"
+    LTime: 7
+    Name: "deploy"
+    Payload: []byte{0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x30}
 ```
 
 Attributes
