@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[0.6.0](https://github.com/bbaugher/serf/issues?milestone=9&state=closed)
+-------------------------------------------------------------------------
+
+  * [Feature] [Issue-27](https://github.com/bbaugher/serf/issues/27) : Feature/event
+
 [0.5.0](https://github.com/bbaugher/serf/issues?milestone=7&state=closed)
 -------------------------------------------------------------------------
 
@@ -49,4 +54,3 @@ Change Log
 -------------------------------------------------------------------------
 
   * [Feature] [Issue-16](https://github.com/bbaugher/serf/issues/16) : Initial cookbook
-
