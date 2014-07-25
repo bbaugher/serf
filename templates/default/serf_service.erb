@@ -52,7 +52,7 @@ stop() {
       while [[ -n $FOUND_PID ]]; 
   	  do
         echo "Attempting to shutdown $NAME..."
-        su -l $SERF_USER -c "kill -INT $FOUND_PID"
+        kill -INT $FOUND_PID
       
         if [[ $? -ne 0 ]]; then
 	      echo "Error stopping $NAME"
@@ -87,7 +87,7 @@ reload() {
   if [ -z "$FOUND_PID" ]; then
     echo "$NAME is not running" ; exit 1
   else
-    su -l $SERF_USER -c "kill -HUP $FOUND_PID"
+    kill -HUP $FOUND_PID
     echo "Reloaded $NAME" 
   fi
 }
