@@ -171,7 +171,7 @@ template helper.getAgentConfig do
   mode 00755
   variables( :agent_json => helper.getAgentJson)
   backup false
-  notifies :reload, "service[serf]"
+  notifies node["serf"]["on_config_change"], "service[serf]"
 end
 
 # Create init.d script

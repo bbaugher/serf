@@ -3,6 +3,8 @@
 default["serf"]["user"] = "serf"
 default["serf"]["group"] = "serf"
 
+default["serf"]["on_config_change"] = :reload
+
 default["serf"]["agent"] = {}
 default["serf"]["agent"]["event_handlers"] = []
 
