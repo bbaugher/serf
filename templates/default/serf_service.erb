@@ -26,9 +26,9 @@ CURRENT_WAIT=0
 TIMEOUT=30
 
 start() {
-	findPid
-	
-	if [ "" = "$FOUND_PID" ]; then
+    findPid
+    
+    if [ "" = "$FOUND_PID" ]; then
       su -l $SERF_USER -c "$SERF_BINARY agent -config-file $SERF_AGENT_CONF_FILE >>$SERF_AGENT_LOG 2>&1 &"
       
       if [[ $? -ne 0 ]]; then
@@ -44,22 +44,22 @@ start() {
 }
 
 stop() {
-	findPid
-	if [ -z "$FOUND_PID" ]; then
+    findPid
+    if [ -z "$FOUND_PID" ]; then
       echo "$NAME is not running, nothing to stop"
     else
     
       while [[ -n $FOUND_PID ]]; 
-  	  do
+        do
         echo "Attempting to shutdown $NAME..."
         kill -INT $FOUND_PID
       
         if [[ $? -ne 0 ]]; then
-	      echo "Error stopping $NAME"
-	      exit 1
-	    fi
-	    
-	    sleep $SLEEP_TIME
+          echo "Error stopping $NAME"
+          exit 1
+        fi
+        
+        sleep $SLEEP_TIME
         CURRENT_WAIT=$(($CURRENT_WAIT+$SLEEP_TIME))
         if [[ $CURRENT_WAIT -gt $TIMEOUT ]]; then
           echo "Timed out waiting for $NAME to stop"
@@ -93,7 +93,7 @@ reload() {
 }
 
 findPid() {
-	FOUND_PID=`pgrep -f $SERF_BINARY`
+    FOUND_PID=`pgrep -f $SERF_BINARY`
 }
 
 case "$1" in
