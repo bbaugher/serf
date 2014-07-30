@@ -17,7 +17,7 @@ task :release do
   
   # Share the cookbook
   puts "Sharing cookbook ..."
-  run_command "knife cookbook site share serf Other"
+  run_command "knife cookbook site share serf Applications -o .."
   puts "Shared cookbook!"
  
   # Tag the release
