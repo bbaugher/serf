@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[0.7.0](https://github.com/bbaugher/serf/issues?milestone=10&state=closed)
+--------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-28](https://github.com/bbaugher/serf/issues/28) : Get action to perform on config change from attributes
+
 [0.6.0](https://github.com/bbaugher/serf/issues?milestone=9&state=closed)
 -------------------------------------------------------------------------
 
