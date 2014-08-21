@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[0.7.1](https://github.com/bbaugher/serf/issues?milestone=11&state=closed)
+--------------------------------------------------------------------------
+
+  * [Bug] [Issue-29](https://github.com/bbaugher/serf/issues/29) : PaxHeader folder in 0.7.0 release
+
 [0.7.0](https://github.com/bbaugher/serf/issues?milestone=10&state=closed)
 --------------------------------------------------------------------------
 
