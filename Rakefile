@@ -17,7 +17,7 @@ task :release do
   
   # Share the cookbook
   puts "Sharing cookbook ..."
-  run_command "knife cookbook site share serf Applications -o .."
+  run_command "stove --no-git --username bbaugher --key ~/.chef/bbaugher.pem"
   puts "Shared cookbook!"
  
   # Tag the release
