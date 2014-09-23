@@ -137,7 +137,7 @@ end
 def generate_milestone_markdown milestone
   strings = Array.new
   
-  title = "[#{milestone.title}](https://github.com/#{REPO}/issues?milestone=#{milestone.number}&state=closed)"
+  title = "[#{milestone.title} - #{milestone.updated_at.strftime("%m-%d-%Y")}](https://github.com/#{REPO}/issues?milestone=#{milestone.number}&state=closed)"
   
   strings.push "#{title}"
   strings.push "-" * title.length
