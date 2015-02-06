@@ -113,3 +113,4 @@ Attributes
  * `node["serf"]["log_directory"]` : The directory of the Serf agent logs (default="/var/log/serf")
  * `node["serf"]["conf_directory"]` : The directory of the Serf agent config (default="/etc/serf")
  * `node["serf"]["on_config_change"]` : An action to be performed if config is changed (default=:reload)
+ * `node["serf"]["init_info"]` : A hash of init information used by the init service script (see attributes file for defaults)

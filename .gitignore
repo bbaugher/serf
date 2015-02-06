@@ -3,3 +3,5 @@
 Vagrantfile
 .kitchen.local.yml
 .kitchen
+.kitchen/
+Berksfile.lock
