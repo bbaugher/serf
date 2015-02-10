@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+[0.8.0 - 02-10-2015](https://github.com/bbaugher/serf/issues?milestone=12&state=closed)
+---------------------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-30](https://github.com/bbaugher/serf/issues/30) : serf doesn't start on CentOS 7 with dhcp
+  * [Enhancement] [Issue-10](https://github.com/bbaugher/serf/issues/10) : Add tests
+
 [0.7.1 - 08-21-2014](https://github.com/bbaugher/serf/issues?milestone=11&state=closed)
 ---------------------------------------------------------------------------------------
 
@@ -64,4 +70,3 @@ Change Log
 --------------------------------------------------------------------------------------
 
   * [Feature] [Issue-16](https://github.com/bbaugher/serf/issues/16) : Initial cookbook
-
