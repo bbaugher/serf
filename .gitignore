@@ -5,3 +5,6 @@ Vagrantfile
 .kitchen
 .kitchen/
 Berksfile.lock
+Gemfile.lock
+vendor/
+.bundle/

@@ -17,7 +17,7 @@ task :release do
   
   # Share the cookbook
   puts "Sharing cookbook ..."
-  run_command "stove --no-git --username bbaugher --key ~/.chef/bbaugher.pem"
+  run_command "bundle exec stove --no-git"
   puts "Shared cookbook!"
  
   # Tag the release
