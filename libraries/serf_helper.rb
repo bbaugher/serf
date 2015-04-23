@@ -2,79 +2,79 @@
 require 'json'
 
 class Chef::Recipe::SerfHelper < Chef::Recipe
-  
+
   SERF_VERSION_REGEX = /^Serf v\d.\d.\d/
   VERSION_REGEX = /\d.\d.\d/
-  
+
   # Initializes the helper class
-  def initialize chefRecipe
-    super(chefRecipe.cookbook_name, chefRecipe.recipe_name, chefRecipe.run_context)
-    
+  def initialize chef_recipe
+    super(chef_recipe.cookbook_name, chef_recipe.recipe_name, chef_recipe.run_context)
+
     # TODO: Support other distributions besides 'linux'
     node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
-    
-    currentVersion = getSerfInstalledVersion
-    if currentVersion
-      Chef::Log.info "Current Serf Version : [#{currentVersion}]"
+
+    current_version = get_serf_installed_version
+    if current_version
+      Chef::Log.info "Current Serf Version : [#{current_version}]"
     end
   end
-  
-  def getBinDirectory
+
+  def get_bin_directory
      File.join node["serf"]["base_directory"], "bin"
   end
-  
-  def getSerfBinary
-    File.join getBinDirectory, "serf"
+
+  def get_serf_binary
+    File.join get_bin_directory, "serf"
   end
-  
-  def getEventHandlersDirectory
+
+  def get_event_handlers_directory
     File.join node["serf"]["base_directory"], "event_handlers"
   end
-  
-  def getHomeConfigDirectory
+
+  def get_home_config_directory
     File.join node["serf"]["base_directory"], "config"
   end
-  
-  def getAgentConfig
-    File.join getHomeConfigDirectory, "serf_agent.json"
+
+  def get_agent_config
+    File.join get_home_config_directory, "serf_agent.json"
   end
-  
-  def getHomeLogDirectory
+
+  def get_home_log_directory
     File.join node["serf"]["base_directory"], "logs"
   end
-  
-  def getAgentLog
-    File.join getHomeLogDirectory, "agent.log"
+
+  def get_agent_log
+    File.join get_home_log_directory, "agent.log"
   end
-  
-  def getAgentJson
+
+  def get_agent_json
     JSON.pretty_generate(node["serf"]["agent"].to_hash)
   end
-  
-  def getZipFilePath
+
+  def get_zip_file_path
     File.join Chef::Config[:file_cache_path], "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
   end
-  
-  def getSerfInstalledVersion
-    unless File.exists? getSerfBinary
+
+  def get_serf_installed_version
+    unless File.exists? get_serf_binary
       return "NONE"
     end
-    
-    versionOutput = `#{getSerfBinary} version`.chomp
-    serfMatch = SERF_VERSION_REGEX.match(versionOutput)
-      
-    if serfMatch.size == 0
-      raise "Unable to parse version from `serf version` output [#{versionOutput}]"
+
+    version_output = `#{get_serf_binary} version`.chomp
+    serf_match = SERF_VERSION_REGEX.match(version_output)
+
+    if serf_match.size == 0
+      raise "Unable to parse version from `serf version` output [#{version_output}]"
     end
-    
-    versionMatch = VERSION_REGEX.match(serfMatch[0])
-    
+
+    version_match = VERSION_REGEX.match(serf_match[0])
+
     # Should never happen
-    if versionMatch.size == 0
-      raise "Unable to parse version from `serf version` output [#{versionOutput}]"
+    if version_match.size == 0
+      raise "Unable to parse version from `serf version` output [#{version_output}]"
     end
-    
-    versionMatch[0]
+
+    version_match[0]
   end
-  
+
 end

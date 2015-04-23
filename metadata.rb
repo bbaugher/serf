@@ -9,4 +9,6 @@ long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
   supports os
 end
 
+depends 'logrotate'
+
 version          '0.9.0'

@@ -8,9 +8,9 @@
 ### END INIT INFO
 
 NAME="Serf Agent"
-SERF_BINARY=<%= @helper.getSerfBinary %>
-SERF_AGENT_LOG=<%= @helper.getAgentLog %>
-SERF_AGENT_CONF_FILE=<%= @helper.getAgentConfig %>
+SERF_BINARY=<%= @helper.get_serf_binary %>
+SERF_AGENT_LOG=<%= @helper.get_agent_log %>
+SERF_AGENT_CONF_FILE=<%= @helper.get_agent_config %>
 SERF_USER=<%= node["serf"]["user"] %>
 
 SLEEP_TIME=5
@@ -18,7 +18,7 @@ CURRENT_WAIT=0
 TIMEOUT=30
 
 start() {
-    findPid
+    find_pid
     
     if [ "" = "$FOUND_PID" ]; then
       su -l $SERF_USER -c "$SERF_BINARY agent -config-file $SERF_AGENT_CONF_FILE >>$SERF_AGENT_LOG 2>&1 &"
@@ -36,7 +36,7 @@ start() {
 }
 
 stop() {
-    findPid
+    find_pid
     if [ -z "$FOUND_PID" ]; then
       echo "$NAME is not running, nothing to stop"
     else
@@ -57,7 +57,7 @@ stop() {
           echo "Timed out waiting for $NAME to stop"
           exit 1
         fi
-        findPid
+        find_pid
       done
       
       echo "Stopped $NAME"
@@ -66,7 +66,7 @@ stop() {
 }
 
 status() {
-  findPid
+  find_pid
   if [ -z "$FOUND_PID" ]; then
     echo "$NAME is not running" ; exit 1
   else
@@ -75,7 +75,7 @@ status() {
 }
 
 reload() {
-  findPid
+  find_pid
   if [ -z "$FOUND_PID" ]; then
     echo "$NAME is not running" ; exit 1
   else
@@ -84,7 +84,7 @@ reload() {
   fi
 }
 
-findPid() {
+find_pid() {
     FOUND_PID=`pgrep -f $SERF_BINARY`
 }
 
