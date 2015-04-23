@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[0.9.0 - 04-23-2015](https://github.com/bbaugher/serf/issues?milestone=13&state=closed)
+---------------------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-31](https://github.com/bbaugher/serf/issues/31) : Refactoring
+
 [0.8.0 - 02-10-2015](https://github.com/bbaugher/serf/issues?milestone=12&state=closed)
 ---------------------------------------------------------------------------------------
 
