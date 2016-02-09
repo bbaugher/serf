@@ -11,7 +11,7 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
     super(chef_recipe.cookbook_name, chef_recipe.recipe_name, chef_recipe.run_context)
 
     # TODO: Support other distributions besides 'linux'
-    node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
+    node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}", "serf_#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
 
     current_version = get_serf_installed_version
     if current_version
