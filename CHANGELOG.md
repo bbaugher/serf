@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[1.0.0 - 02-09-2016](https://github.com/bbaugher/serf/issues?milestone=14&state=closed)
+---------------------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-32](https://github.com/bbaugher/serf/issues/32) : Updates serf download url to official repo
+
 [0.9.0 - 04-23-2015](https://github.com/bbaugher/serf/issues?milestone=13&state=closed)
 ---------------------------------------------------------------------------------------
 
