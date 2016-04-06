@@ -12,13 +12,14 @@ platforms:
 suites:
   - name: default
     run_list:
-      # We only include apt because of an issue installing java where ubuntu 
+      # We only include apt because of an issue installing java where ubuntu
       # requires an apt-get update in order to successfully run
       - recipe[apt]
       - recipe[serf]
     attributes:
       serf:
         agent:
-          fake: value
+          # Have to provide a real config value otherwise serf won't start
+          log_level: info
         init_info:
           fake: value

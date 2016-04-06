@@ -15,7 +15,7 @@ describe file('/etc/serf/serf_agent.json') do
   it { should be_file }
   it { should be_owned_by 'serf' }
   it { should be_grouped_into 'serf' }
-  it { should contain '"fake": "value"' }
+  it { should contain '"log_level": "info"' }
 end
 
 describe file('/etc/init.d/serf') do
