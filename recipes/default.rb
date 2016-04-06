@@ -47,7 +47,7 @@ end
 # Download binary zip file
 remote_file helper.get_zip_file_path do
   action :create_if_missing
-  source node["serf"]["binary_url"]
+  source helper.get_binary_url
   group node["serf"]["group"]
   owner node["serf"]["user"]
   mode 00644
