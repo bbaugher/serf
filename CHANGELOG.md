@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[1.1.0 - 04-06-2016](https://github.com/bbaugher/serf/issues?milestone=15&state=closed)
+---------------------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-33](https://github.com/bbaugher/serf/issues/33) : Initialize SerfHelper Differently to Avoid compat_resource Cookbook Conflict
+
 [1.0.0 - 02-09-2016](https://github.com/bbaugher/serf/issues?milestone=14&state=closed)
 ---------------------------------------------------------------------------------------
 
