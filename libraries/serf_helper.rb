@@ -49,7 +49,8 @@ class Chef::Recipe::SerfHelper
   end
 
   def get_binary_url
-    File.join node["serf"]["base_binary_url"], node["serf"]["version"], get_binary_filename
+    node["serf"]["binary_url"] ||
+    File.join(node["serf"]["base_binary_url"], node["serf"]["version"], get_binary_filename)
   end
 
   def get_serf_installed_version
