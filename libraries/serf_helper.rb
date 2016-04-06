@@ -45,7 +45,11 @@ class Chef::Recipe::SerfHelper
   end
 
   def get_zip_file_path
-    File.join Chef::Config[:file_cache_path], "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
+    File.join Chef::Config[:file_cache_path], get_binary_filename
+  end
+
+  def get_binary_url
+    File.join node["serf"]["base_binary_url"], node["serf"]["version"], get_binary_filename
   end
 
   def get_serf_installed_version
@@ -70,4 +74,9 @@ class Chef::Recipe::SerfHelper
     version_match[0]
   end
 
+  private
+
+  def get_binary_filename
+    "serf_#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
+  end
 end
