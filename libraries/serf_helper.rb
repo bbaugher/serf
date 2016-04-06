@@ -1,22 +1,15 @@
 # coding: UTF-8
 require 'json'
 
-class Chef::Recipe::SerfHelper < Chef::Recipe
+class Chef::Recipe::SerfHelper
 
   SERF_VERSION_REGEX = /^Serf v\d.\d.\d/
   VERSION_REGEX = /\d.\d.\d/
 
-  # Initializes the helper class
-  def initialize chef_recipe
-    super(chef_recipe.cookbook_name, chef_recipe.recipe_name, chef_recipe.run_context)
+  attr_accessor :node
 
-    # TODO: Support other distributions besides 'linux'
-    node.default["serf"]["binary_url"] = File.join node["serf"]["base_binary_url"], "#{node["serf"]["version"]}", "serf_#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
-
-    current_version = get_serf_installed_version
-    if current_version
-      Chef::Log.info "Current Serf Version : [#{current_version}]"
-    end
+  def initialize(node)
+    @node = node
   end
 
   def get_bin_directory
@@ -52,7 +45,12 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
   end
 
   def get_zip_file_path
-    File.join Chef::Config[:file_cache_path], "serf-#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
+    File.join Chef::Config[:file_cache_path], get_binary_filename
+  end
+
+  def get_binary_url
+    node["serf"]["binary_url"] ||
+    File.join(node["serf"]["base_binary_url"], node["serf"]["version"], get_binary_filename)
   end
 
   def get_serf_installed_version
@@ -77,4 +75,9 @@ class Chef::Recipe::SerfHelper < Chef::Recipe
     version_match[0]
   end
 
+  private
+
+  def get_binary_filename
+    "serf_#{node["serf"]["version"]}_linux_#{node["serf"]["arch"]}.zip"
+  end
 end

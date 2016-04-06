@@ -7,7 +7,7 @@
 include_recipe 'logrotate'
 
 # Initializes the serf_helper class by giving it access to `node`
-helper = SerfHelper.new self
+helper = SerfHelper.new node
 
 # Create serf user/group
 group node["serf"]["group"] do
@@ -47,7 +47,7 @@ end
 # Download binary zip file
 remote_file helper.get_zip_file_path do
   action :create_if_missing
-  source node["serf"]["binary_url"]
+  source helper.get_binary_url
   group node["serf"]["group"]
   owner node["serf"]["user"]
   mode 00644
