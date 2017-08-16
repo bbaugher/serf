@@ -1,10 +1,6 @@
 Change Log
 ==========
 
-[1.2.0 - 7/25/2017]
-
-  * [Feature] [PAN-1766] (https://jira.grasshopper.com/browse/PAN-1766) : Change serf_service.erb to use -config-dir instead of -config-file
-
 [1.1.0 - 04-06-2016](https://github.com/bbaugher/serf/issues?milestone=15&state=closed)
 ---------------------------------------------------------------------------------------
 
