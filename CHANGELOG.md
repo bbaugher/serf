@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+[1.2.0 - 08-16-2017](https://github.com/bbaugher/serf/issues?milestone=16&state=closed)
+---------------------------------------------------------------------------------------
+
+  * [Enhancement] [Issue-36](https://github.com/bbaugher/serf/issues/36) : Kernel Attribute Fix
+
 [1.1.0 - 04-06-2016](https://github.com/bbaugher/serf/issues?milestone=15&state=closed)
 ---------------------------------------------------------------------------------------
 
